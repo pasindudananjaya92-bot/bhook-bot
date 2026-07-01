@@ -1,4 +1,4 @@
-title: GitHub Explore Feed
+ title: GitHub Explore Feed
 description: Feed for GitHub Topics and Collections.
 
 repository: github/explore
@@ -21,3 +21,5 @@ exclude:
 collections:
   topics:
   explore_collections:
+
+theme: jekyll-theme-minimal
