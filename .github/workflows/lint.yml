@@ -1,67 +1,27 @@
  name: Lint
 
 on:
-  pull_request_target:
-  workflow_dispatch:
-  merge_group:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
   lint:
     runs-on: ubuntu-24.04
-
-    permissions:
-      contents: read
     steps:
-      - uses: actions/checkout@v6.0.2
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Install Ruby and gems
+        uses: ruby/setup-ruby@v1
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.ref }}
-          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
-
-      - name: Setup Ruby
-        uses: ruby/setup-ruby@v1.306.0
-        with:
-          bundler-cache: false
-
-      - name: Install dependencies
-        run: bundle install
-
-      - name: Run RuboCop
-        run: |
-          bundle exec rubocop
-
-  autocorrect:
-    if: github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: ubuntu-24.04
-
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v6.0.2
-        with:
-          ref: ${{ github.event.pull_request.head.ref || github.ref }}
-
-      - name: Setup Ruby
-        uses: ruby/setup-ruby@v1.306.0
-        with:
+          ruby-version: '3.3'
           bundler-cache: true
-
-      - name: Run RuboCop with auto-correct
-        run: |
-          bundle exec rubocop -A
-
-      - name: Check for changes
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          if git status --porcelain | grep .; then
-            echo "changes=true" >> $GITHUB_ENV
-          else
-            echo "changes=false" >> $GITHUB_ENV
-          fi
-
-      - name: Commit and push changes
-        if: env.changes == 'true'
-        run: |
-          git add .
-          git commit -m "chore: auto-corrected with RuboCop"
-          git push
+      - name: Generate binstubs
+        run: bundle binstubs bundler-audit brakeman rubocop
+      - name: Security audit dependencies
+        run: bin/bundler-audit --update
+      - name: Security audit application code
+        run: bin/brakeman -q -w2
+      - name: Lint Ruby files
+        run: bin/rubocop --parallel
