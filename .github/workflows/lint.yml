@@ -1,4 +1,4 @@
- name: Lint
+name: Lint
 
 on:
   push:
@@ -8,20 +8,26 @@ on:
 
 jobs:
   lint:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
       - name: Install Ruby and gems
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.3'
           bundler-cache: true
+
       - name: Generate binstubs
         run: bundle binstubs bundler-audit brakeman rubocop
+
       - name: Security audit dependencies
         run: bin/bundler-audit --update
+
       - name: Security audit application code
         run: bin/brakeman -q -w2
+
       - name: Lint Ruby files
         run: bin/rubocop --parallel
+ 
