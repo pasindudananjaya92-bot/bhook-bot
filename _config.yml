@@ -23,3 +23,5 @@ collections:
   explore_collections:
 
 theme: jekyll-theme-minimal
+baseurl: "/bhook-bot"
+url: "https://github.io"
